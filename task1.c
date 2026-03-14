@@ -8,9 +8,9 @@
 pthread_mutex_t mutex;
 int counter[4]; // A C G T order
 
-char *buffer = "GGCATGACTATGCGTATCGAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCT";
-size_t size = 200;
+#define SIZE (256ULL * 1024 * 1024) // 256 MB
 #define THREAD_NUM 4
+char *buffer;
 
 typedef struct {
 	char *buffer;
@@ -91,6 +91,14 @@ double get_time() {
 }
 
 int main() {
+	char nucleo[] = "ACGT";
+	buffer = (char *) malloc(SIZE);
+	if (buffer == NULL) {
+		perror("Malloc");
+		return 1;
+	}
+	for (size_t i = 0; i < SIZE; i++) buffer[i] = nucleo[rand() % 4];
+
 	for (int i = 0; i < 4; i++) {
 		counter[i] = 0;
 	}
@@ -98,7 +106,7 @@ int main() {
 
 	printf("Scalar\n");
 	double start = get_time();
-	count_scalar(buffer, size);
+	count_scalar(buffer, SIZE);
 	double end = get_time();
 	printf("%d	%d	%d	%d\n", counter[0],counter[1],counter[2],counter[3]);
 	printf("%f sec\n", end - start);
@@ -111,10 +119,10 @@ int main() {
 	pthread_t threads[THREAD_NUM];
 	threadData data[THREAD_NUM] = {0};
 	for (int i = 0; i < THREAD_NUM; i++) {
-		size_t chunk_size  = (size / THREAD_NUM);
+		size_t chunk_size  = (SIZE / THREAD_NUM);
 		data[i].buffer = buffer + (i * chunk_size);
 		if (i == THREAD_NUM - 1) {
-			data[i].size = size - (i * chunk_size);
+			data[i].size = SIZE - (i * chunk_size);
 		} else {
 			data[i].size = chunk_size;
 		}
@@ -138,7 +146,7 @@ int main() {
 	printf("SIMD\n");
 	start = get_time();
 	long long local_counter[4] = {0};
-	count_simd(buffer, size,local_counter);
+	count_simd(buffer, SIZE,local_counter);
 	end = get_time();
 	printf("%d      %d      %d      %d\n", counter[0],counter[1],counter[2],counter[3]);
 	printf("%f sec\n", end - start);
