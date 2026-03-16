@@ -78,6 +78,9 @@ int main() {
 		free(buffer2);
 		return 1;
 	}
+
+	printf("Buffer size: %d MB\n", SIZE/1024/1024);
+	printf("Threads used: %d\n\n", THREAD_NUM);
 	const char *all_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{}|;:,.<>?/ ";
 	for (int i = 0; i < SIZE; i++) buffer[i] = all_chars[rand() % strlen(all_chars)];
 	memcpy(buffer2, buffer, SIZE);
@@ -85,7 +88,7 @@ int main() {
 
 	//printf("Original: %s\n", buffer);
 
-	printf("Multithreading\n");
+	printf("Multithreading:  ");
 	double start = get_time();
 	pthread_t threads[THREAD_NUM];
 	threadData data[THREAD_NUM];
@@ -110,16 +113,16 @@ int main() {
 	}
 	double end = get_time();
 	//printf("%s\n", buffer);
-	printf("%f sec\n\n", end - start);
-
+	printf("%f sec\n", end - start);
+	printf("SIMD:  ");
 	start = get_time();
 	simd_upper(buffer2, SIZE);
 	end = get_time();
 	//printf("%s\n", buffer2);
-	printf("%f sec\n\n", end - start);
+	printf("%f sec\n", end - start);
 
 
-	printf("Multithreading with SIMD\n");
+	printf("Multithreading with SIMD:  ");
 	start = get_time();
 	for (int i = 0; i < THREAD_NUM; i++) {
 		size_t chunk_size  = (SIZE / THREAD_NUM);
@@ -142,6 +145,6 @@ int main() {
 	}
 	end = get_time();
 	//printf("%s\n", buffer2);
-	printf("%f sec\n\n", end - start);
+	printf("%f sec\n", end - start);
 	return 0;
 }

@@ -104,17 +104,21 @@ int main() {
 	}
 	pthread_mutex_init(&mutex, NULL);
 
-	printf("Scalar\n");
+	printf("DNA size: %d MB\n", SIZE/1024/1024);
+	printf("Threads used: %d\n\n", THREAD_NUM);
+
 	double start = get_time();
 	count_scalar(buffer, SIZE);
 	double end = get_time();
-	printf("%d	%d	%d	%d\n", counter[0],counter[1],counter[2],counter[3]);
+	printf("Counts (A C G T):\n");
+	printf("%d\t%d\t%d\t%d\n\n", counter[0],counter[1],counter[2],counter[3]);
+	printf("Scalar:  ");
 	printf("%f sec\n", end - start);
 	for (int i = 0; i < 4; i++) {
 		counter[i] = 0;
         }
 
-	printf("Multithreading\n");
+	printf("Multithreading:  ");
 	start = get_time();
 	pthread_t threads[THREAD_NUM];
 	threadData data[THREAD_NUM] = {0};
@@ -128,49 +132,55 @@ int main() {
 		}
 		if (pthread_create(&threads[i], NULL, worker_scalar, &data[i]) != 0) {
 			perror("Thread creation");
+			free(buffer);
 			return -1;
 		}
 	}
 	for (int i = 0; i < THREAD_NUM; i++) {
 		if (pthread_join(threads[i], NULL) != 0) {
 			perror("Thread join");
+			free(buffer);
 			return -1;
 		}
 	}
 	end = get_time();
-	printf("%d      %d      %d      %d\n", counter[0],counter[1],counter[2],counter[3]);
+	//printf("%d      %d      %d      %d\n", counter[0],counter[1],counter[2],counter[3]);
 	printf("%f sec\n", end - start);
 
 	for (int i = 0; i < 4; i++) counter[i] = 0;
 
-	printf("SIMD\n");
+	printf("SIMD  :");
 	start = get_time();
 	long long local_counter[4] = {0};
 	count_simd(buffer, SIZE,local_counter);
 	end = get_time();
-	printf("%d      %d      %d      %d\n", counter[0],counter[1],counter[2],counter[3]);
+	//printf("%d      %d      %d      %d\n", counter[0],counter[1],counter[2],counter[3]);
 	printf("%f sec\n", end - start);
 
 	for (int i = 0; i < 4; i++) counter[i] = 0;
 
-	printf("SIMD with Multithreading\n");
+	printf("SIMD with Multithreading:  ");
 	start = get_time();
 	for (int i = 0; i < THREAD_NUM; i++) {
 		if (pthread_create(&threads[i], NULL, worker_simd, &data[i]) != 0) {
 			perror("Thread creation");
+			free(buffer);
 			return -1;
 		}
 	}
 	for (int i = 0; i < THREAD_NUM; i++) {
 		if (pthread_join(threads[i], NULL) != 0) {
 			perror("Thread join");
+			free(buffer);
 			return -1;
 		}
 	}
 	end = get_time();
-	printf("%d      %d      %d      %d\n", counter[0],counter[1],counter[2],counter[3]);
+	//printf("%d      %d      %d      %d\n", counter[0],counter[1],counter[2],counter[3]);
 	printf("%f sec\n", end - start);
-	
+
+	pthread_mutex_destroy(&mutex);
+	free(buffer);
 	return 0;
 }
 
